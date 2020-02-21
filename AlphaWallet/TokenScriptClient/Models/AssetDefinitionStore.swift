@@ -50,6 +50,8 @@ class AssetDefinitionStore {
 
     //TODO move
     static var standardTokenScriptStyles: String {
+        //hhh root ID can be hardcoded for now?
+        //hhh probably style so no body for the "root"?
         return """
                <style type="text/css">
                @font-face {
@@ -71,6 +73,9 @@ class AssetDefinitionStore {
                font-family: 'SourceSansPro';
                src: url('\(Constants.tokenScriptUrlSchemeForResources)SourceSansPro-Bold.otf') format('opentype');
                font-weight: bold;
+               }
+               .token-card {
+               padding: 0pt;
                }
                </style>
                """

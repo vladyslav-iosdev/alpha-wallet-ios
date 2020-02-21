@@ -115,10 +115,10 @@ class TokenInstanceWebView: UIView {
 //        string += "\n}"
 
         string += """
-                  \nweb3.tokens.dataChanged(oldTokens, web3.tokens.data)
+                  \nweb3.tokens.dataChanged(oldTokens, web3.tokens.data, "somewhatNice")
                   """
         let javaScript = """
-                         console.log('update() ran')
+                         console.log(`update() ran`)
                          const oldTokens = web3.tokens.data
                          """ + string
 
@@ -382,12 +382,15 @@ func wrapWithHtmlViewport(_ html: String) -> String {
     if html.isEmpty {
         return ""
     } else {
+        //hhh what about body?
         return """
                <html>
                <head>
                <meta name="viewport" content="width=device-width, initial-scale=1,  maximum-scale=1, shrink-to-fit=no">
                </head>
+               <div id="somewhatNice" class="token-card">
                \(html)
+               </div>
                </html>
                """
     }
