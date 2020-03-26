@@ -324,7 +324,7 @@ extension SendViewController: QRCodeReaderDelegate {
         case .address(let recipient):
             guard let tokenObject = storage.token(forContract: viewModel.transferType.contract) else { return }
             let amountAsIntWithDecimals = EtherNumberFormatter.full.number(from: amountTextField.ethCost, decimals: tokenObject.decimals)
-            configureFor(contract: transferType.contract, recipient: .address(recipient), amount: amountAsIntWithDecimals)
+            configureFor(contract: transferType.contract, recipient: .address(recipient), amount: nil)
         case .eip681(let protocolName, let address, let functionName, let params):
             checkAndFillEIP681Details(protocolName: protocolName, address: address, functionName: functionName, params: params)
         }
@@ -387,9 +387,10 @@ extension SendViewController: QRCodeReaderDelegate {
         guard let tokenObject = storage.token(forContract: contract) else { return }
         let amount = amount.flatMap { EtherNumberFormatter.full.string(from: $0, decimals: tokenObject.decimals) }
         let transferType: TransferType
-        if let amount = amount {
+        if let amount = amount, amount != "0"{
             transferType = TransferType(token: tokenObject, recipient: recipient, amount: amount)
-        } else {
+        }
+        else {
             switch viewModel.transferType {
             case .nativeCryptocurrency(_, _, let amount):
                 transferType = TransferType(token: tokenObject, recipient: recipient, amount: amount.flatMap { EtherNumberFormatter().string(from: $0, units: .ether) })
