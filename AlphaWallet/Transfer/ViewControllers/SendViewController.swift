@@ -210,10 +210,10 @@ class SendViewController: UIViewController, CanScanQRCode {
             if let amount = amount {
                 amountTextField.ethCost = amount
             }
-            amountTextField.alternativeAmountLabel.isHidden = true
+            amountTextField.isAlternativeAmountEnabled = false
             amountTextField.isFiatButtonHidden = true
         case .ERC875Token, .ERC875TokenOrder, .ERC721Token, .ERC721ForTicketToken, .dapp:
-            amountTextField.alternativeAmountLabel.isHidden = true
+            amountTextField.isAlternativeAmountEnabled = false
             amountTextField.isFiatButtonHidden = true
         }
 
@@ -244,7 +244,7 @@ class SendViewController: UIViewController, CanScanQRCode {
         }
         
         let amountString = amountTextField.ethCost
-        let parsedValue: BigInt? = {1
+        let parsedValue: BigInt? = {
             switch transferType {
             case .nativeCryptocurrency, .dapp:
                 return EtherNumberFormatter.full.number(from: amountString, units: .ether)

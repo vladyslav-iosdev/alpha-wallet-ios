@@ -10,7 +10,16 @@ protocol AmountTextFieldDelegate: class {
 class AmountTextField: UIControl {
     enum Currency {
         case cryptoCurrency(String, UIImage)
-        case usd(String, UIImage)
+        case usd(String)
+        
+        var icon: UIImage {
+            switch self {
+                case .cryptoCurrency(_, let image):
+                    return image
+                case .usd:
+                    return R.image.usaFlag()!
+            }
+        }
     }
 
     struct Pair {
@@ -52,6 +61,7 @@ class AmountTextField: UIControl {
             if let _ = cryptoToDollarRate {
                 updateAlternatePricingDisplay()
             }
+            isAlternativeAmountEnabled = cryptoToDollarRate != nil
         }
     }
     var ethCost: String {
@@ -110,9 +120,9 @@ class AmountTextField: UIControl {
         let button = SelectCurrencyButton()
         
         switch self.currentPair.left {
-        case .cryptoCurrency(let symbol, let icon), .usd(let symbol, let icon):
+        case .cryptoCurrency(let symbol, _), .usd(let symbol):
             button.text = symbol
-            button.image = icon
+            button.image = self.currentPair.left.icon
         }
         
         button.addTarget(self, action: #selector(fiatAction), for: .touchUpInside)
@@ -120,8 +130,6 @@ class AmountTextField: UIControl {
         return button
     }()
     
-    weak var delegate: AmountTextFieldDelegate?
-
     private var allowedCharacters: String = {
         let decimalSeparator = Locale.current.decimalSeparator ?? ""
         return "0123456789" + decimalSeparator + EtherNumberFormatter.decimalPoint
@@ -131,12 +139,23 @@ class AmountTextField: UIControl {
         return DecimalFormatter()
     }()
     
+    var isAlternativeAmountEnabled: Bool {
+        get {
+            return !alternativeAmountLabel.isHidden
+        }
+        set {
+            alternativeAmountLabel.isHidden = !newValue
+        }
+    }
+    
+    weak var delegate: AmountTextFieldDelegate?
+    
     init(server: RPCServer) {
         switch server {
         case .xDai:
-            currentPair = Pair(left: .cryptoCurrency("xDAI", #imageLiteral(resourceName: "xDai")), right: .usd("USD", R.image.usaFlag()!))
+            currentPair = Pair(left: .cryptoCurrency("xDAI", #imageLiteral(resourceName: "xDai")), right: .usd("USD"))
         case .rinkeby, .ropsten, .main, .custom, .callisto, .classic, .kovan, .sokol, .poa, .goerli, .artis_sigma1, .artis_tau1:
-            currentPair = Pair(left: .cryptoCurrency("ETH", #imageLiteral(resourceName: "eth")), right: .usd("USD", R.image.usaFlag()!))
+            currentPair = Pair(left: .cryptoCurrency("ETH", #imageLiteral(resourceName: "eth")), right: .usd("USD"))
         }
 
         super.init(frame: .zero)
@@ -148,7 +167,7 @@ class AmountTextField: UIControl {
         addSubview(stackView)
         
         computeAlternateAmount()
-        
+        isAlternativeAmountEnabled = cryptoToDollarRate != nil
         NSLayoutConstraint.activate([
             stackView.anchorsConstraint(to: self),
         ])
@@ -156,6 +175,7 @@ class AmountTextField: UIControl {
 
     @objc func fiatAction(button: UIButton) {
         guard cryptoToDollarRate != nil else { return }
+        
         let oldAlternateAmount = convertToAlternateAmount()
         currentPair = currentPair.swapPair()
         updateFiatButtonTitle()
@@ -167,9 +187,9 @@ class AmountTextField: UIControl {
 
     private func updateFiatButtonTitle() {
         switch currentPair.left {
-        case .cryptoCurrency(let symbol, let icon), .usd(let symbol, let icon):
+        case .cryptoCurrency(let symbol, _), .usd(let symbol):
             selectCurrencyButton.text = symbol
-            selectCurrencyButton.image = icon
+            selectCurrencyButton.image = currentPair.left.icon
         }
     }
 
