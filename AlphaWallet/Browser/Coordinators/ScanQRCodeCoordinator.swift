@@ -8,36 +8,52 @@ protocol ScanQRCodeCoordinatorDelegate: class {
     func didScan(result: String, in coordinator: ScanQRCodeCoordinator)
 }
 
-final class  ScanQRCodeCoordinator: NSObject, Coordinator {
+final class ScanQRCodeCoordinator: NSObject, Coordinator {
     var coordinators: [Coordinator] = []
     weak var delegate: ScanQRCodeCoordinatorDelegate?
 
-    let navigationController: NavigationController
     lazy var qrcodeController: QRCodeReaderViewController = {
-        let controller = QRCodeReaderViewController(cancelButtonTitle: R.string.localizable.cancel(), chooseFromPhotoLibraryButtonTitle: R.string.localizable.photos())
+        let reader = QRCodeReader(metadataObjectTypes: [AVMetadataObject.ObjectType.qr])
+
+        let controller = QRCodeReaderViewController(
+            cancelButtonTitle: nil,
+            codeReader: reader,
+            startScanningAtLoad: true,
+            showSwitchCameraButton: false,
+            showTorchButton: true,
+            chooseFromPhotoLibraryButtonTitle: R.string.localizable.photos(),
+            bordersColor: Colors.qrCodeRectBorders,
+            messageText: R.string.localizable.qrCodeTitle(),
+            torchTitle: R.string.localizable.light(),
+            torchImage: R.image.light(),
+            chooseFromPhotoLibraryButtonImage: R.image.browse()
+        )
         controller.delegate = self
-        controller.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(dismiss))
+        controller.title = R.string.localizable.browserScanQRCodeTitle()
+        controller.navigationItem.leftBarButtonItem = UIBarButtonItem(image: R.image.backWhite(), style: .plain, target: self, action: #selector(dismiss))
         controller.delegate = self
         return controller
     }()
-
-    init(
-        navigationController: NavigationController = NavigationController()
-        ) {
+    
+    let navigationController: NavigationController
+    
+    init(navigationController: NavigationController) {
         self.navigationController = navigationController
     }
 
     func start() {
-        qrcodeController.makePresentationFullScreenForiOS13Migration()
-        navigationController.present(qrcodeController, animated: true, completion: nil)
+        navigationController.makePresentationFullScreenForiOS13Migration()
+        navigationController.viewControllers = [qrcodeController]
     }
 
     @objc func dismiss() {
-        qrcodeController.dismiss(animated: true, completion: nil)
+        navigationController.dismiss(animated: true, completion: nil)
+        delegate?.didCancel(in: self)
     }
 }
 
 extension ScanQRCodeCoordinator: QRCodeReaderDelegate {
+    
     func readerDidCancel(_ reader: QRCodeReaderViewController!) {
         reader.stopScanning()
         reader.dismiss(animated: true)

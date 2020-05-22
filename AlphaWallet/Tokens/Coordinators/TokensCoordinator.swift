@@ -3,6 +3,7 @@
 import Foundation
 import UIKit
 import PromiseKit
+import AVFoundation
 
 protocol TokensCoordinatorDelegate: class, CanOpenURL {
     func didPress(for type: PaymentFlow, server: RPCServer, in coordinator: TokensCoordinator)
@@ -62,7 +63,7 @@ class TokensCoordinator: Coordinator {
         return coordinators.compactMap { $0 as? SingleChainTokenCoordinator }
     }
 
-    let navigationController: UINavigationController
+    let navigationController: NavigationController
     var coordinators: [Coordinator] = []
     weak var delegate: TokensCoordinatorDelegate?
 
@@ -71,7 +72,7 @@ class TokensCoordinator: Coordinator {
     }()
 
     init(
-            navigationController: UINavigationController = NavigationController(),
+            navigationController: NavigationController = NavigationController(),
             sessions: ServerDictionary<WalletSession>,
             keystore: Keystore,
             config: Config,
@@ -261,7 +262,34 @@ extension TokensCoordinator: TokensViewControllerDelegate {
     }
 }
 
+extension TokensCoordinator: ScanQRCodeCoordinatorDelegate {
+    
+    func didCancel(in coordinator: ScanQRCodeCoordinator) {
+        removeCoordinator(coordinator)
+    }
+    
+    func didScan(result: String, in coordinator: ScanQRCodeCoordinator) {
+        removeCoordinator(coordinator)
+        newTokenViewController?.didScanQRCode(result)
+    }
+}
+
 extension TokensCoordinator: NewTokenViewControllerDelegate {
+    
+    func openQRCode(in controller: NewTokenViewController) {
+        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
+            navigationController.promptUserOpenSettingsToChangeCameraPermission()
+            return
+        }
+
+        let coordinator = ScanQRCodeCoordinator(navigationController: NavigationController())
+        coordinator.delegate = self
+        addCoordinator(coordinator)
+        coordinator.start()
+
+        navigationController.present(coordinator.navigationController, animated: true, completion: nil)
+    }
+    
     func didAddToken(token: ERCToken, in viewController: NewTokenViewController) {
         guard let coordinator = singleChainTokenCoordinator(forServer: token.server) else { return }
         coordinator.add(token: token)

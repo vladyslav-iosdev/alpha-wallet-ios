@@ -3,7 +3,7 @@
 import Foundation
 import UIKit
 import BigInt
-import QRCodeReaderViewController
+import AVFoundation
 import RealmSwift
 import WebKit
 
@@ -371,8 +371,9 @@ final class DappBrowserCoordinator: NSObject, Coordinator {
         let coordinator = ScanQRCodeCoordinator(navigationController: NavigationController())
         coordinator.delegate = self
         addCoordinator(coordinator)
-        coordinator.navigationController.makePresentationFullScreenForiOS13Migration()
-        navigationController.present(coordinator.qrcodeController, animated: true, completion: nil)
+        coordinator.start()
+        
+        navigationController.present(coordinator.navigationController, animated: true, completion: nil)
     }
 
     private func showServers() {

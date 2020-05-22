@@ -4,6 +4,7 @@ import Foundation
 import UIKit
 import BigInt
 import PromiseKit
+import AVFoundation
 
 protocol SendCoordinatorDelegate: class, CanOpenURL {
     func didFinish(_ result: ConfirmResult, in coordinator: SendCoordinator)
@@ -24,13 +25,13 @@ class SendCoordinator: Coordinator {
         return makeSendViewController()
     }()
 
-    let navigationController: UINavigationController
+    let navigationController: NavigationController
     var coordinators: [Coordinator] = []
     weak var delegate: SendCoordinatorDelegate?
 
     init(
             transferType: TransferType,
-            navigationController: UINavigationController = UINavigationController(),
+            navigationController: NavigationController = NavigationController(),
             session: WalletSession,
             keystore: Keystore,
             storage: TokensDataStore,
@@ -107,7 +108,33 @@ class SendCoordinator: Coordinator {
     }
 }
 
+extension SendCoordinator: ScanQRCodeCoordinatorDelegate {
+    
+    func didCancel(in coordinator: ScanQRCodeCoordinator) {
+        
+    }
+    
+    func didScan(result: String, in coordinator: ScanQRCodeCoordinator) {
+        sendViewController.didScanQRCode(result)
+    }
+}
+
 extension SendCoordinator: SendViewControllerDelegate {
+    
+    func openQRCode(in controller: SendViewController) {
+        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
+            navigationController.promptUserOpenSettingsToChangeCameraPermission()
+            return
+        }
+
+        let coordinator = ScanQRCodeCoordinator(navigationController: NavigationController())
+        coordinator.delegate = self
+        addCoordinator(coordinator)
+        coordinator.start()
+
+        navigationController.present(coordinator.navigationController, animated: true, completion: nil)
+    }
+    
     func didPressConfirm(transaction: UnconfirmedTransaction, transferType: TransferType, in viewController: SendViewController) {
 
         let configurator = TransactionConfigurator(

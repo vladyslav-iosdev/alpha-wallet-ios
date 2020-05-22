@@ -1,11 +1,11 @@
 // Copyright © 2018 Stormbird PTE. LTD.
 
 import UIKit
-import QRCodeReaderViewController
 import TrustWalletCore
 
 protocol ImportWalletViewControllerDelegate: class {
     func didImportAccount(account: Wallet, in viewController: ImportWalletViewController)
+    func openQRCode(in controller: ImportWalletViewController)
 }
 
 // swiftlint:disable type_body_length
@@ -437,16 +437,9 @@ class ImportWalletViewController: UIViewController, CanScanQRCode {
     }
 
     @objc func openReader() {
-        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
-            promptUserOpenSettingsToChangeCameraPermission()
-            return
-        }
-        let controller = QRCodeReaderViewController(cancelButtonTitle: nil, chooseFromPhotoLibraryButtonTitle: R.string.localizable.photos())
-        controller.delegate = self
-        controller.makePresentationFullScreenForiOS13Migration()
-        present(controller, animated: true, completion: nil)
+        delegate?.openQRCode(in: self)
     }
-
+    
     func setValueForCurrentField(string: String) {
         guard let tab = viewModel.convertSegmentedControlSelectionToFilter(tabBar.selection) else { return }
         switch tab {
@@ -551,22 +544,14 @@ extension ImportWalletViewController: UIDocumentPickerDelegate {
             keystoreJSONTextView.value = text
         }
     }
-}
-
-extension ImportWalletViewController: QRCodeReaderDelegate {
-    func readerDidCancel(_ reader: QRCodeReaderViewController!) {
-        reader.stopScanning()
-        reader.dismiss(animated: true, completion: nil)
-    }
-
-    func reader(_ reader: QRCodeReaderViewController!, didScanResult result: String!) {
-        reader.stopScanning()
-        setValueForCurrentField(string: result)
-        reader.dismiss(animated: true)
-    }
-}
+} 
 
 extension ImportWalletViewController: TextFieldDelegate {
+    
+    func didScanQRCode(_ result: String) {
+        setValueForCurrentField(string: result)
+    }
+    
     func shouldReturn(in textField: TextField) -> Bool {
         moveFocusToTextEntryField(after: textField)
         return false

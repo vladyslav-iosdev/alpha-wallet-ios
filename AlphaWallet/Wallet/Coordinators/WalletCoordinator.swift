@@ -2,6 +2,7 @@
 
 import Foundation
 import UIKit
+import AVFoundation
 
 protocol WalletCoordinatorDelegate: class {
     func didFinish(with account: Wallet, in coordinator: WalletCoordinator)
@@ -12,14 +13,14 @@ class WalletCoordinator: Coordinator {
     private let config: Config
     private var entryPoint: WalletEntryPoint?
     private var keystore: Keystore
-
-    var navigationController: UINavigationController
+    private weak var importWalletViewController: ImportWalletViewController?
+    var navigationController: NavigationController
     weak var delegate: WalletCoordinatorDelegate?
     var coordinators: [Coordinator] = []
-
+    
     init(
         config: Config,
-        navigationController: UINavigationController = NavigationController(),
+        navigationController: NavigationController = NavigationController(),
         keystore: Keystore
     ) {
         self.config = config
@@ -43,12 +44,14 @@ class WalletCoordinator: Coordinator {
             controller.delegate = self
             controller.navigationItem.leftBarButtonItem = UIBarButtonItem(title: R.string.localizable.cancel(), style: .plain, target: self, action: #selector(dismiss))
             navigationController.viewControllers = [controller]
+            importWalletViewController = controller
         case .watchWallet:
             let controller = ImportWalletViewController(keystore: keystore)
             controller.delegate = self
             controller.navigationItem.leftBarButtonItem = UIBarButtonItem(title: R.string.localizable.cancel(), style: .plain, target: self, action: #selector(dismiss))
             controller.showWatchTab()
             navigationController.viewControllers = [controller]
+            importWalletViewController = controller
         case .createInstantWallet:
             createInstantWallet()
             return false
@@ -143,7 +146,36 @@ extension WalletCoordinator: WelcomeViewControllerDelegate {
     }
 }
 
+extension WalletCoordinator: ScanQRCodeCoordinatorDelegate {
+
+    func didCancel(in coordinator: ScanQRCodeCoordinator) {
+        removeCoordinator(coordinator)
+    }
+    
+    func didScan(result: String, in coordinator: ScanQRCodeCoordinator) {
+        removeCoordinator(coordinator)
+        
+        importWalletViewController?.didScanQRCode(result)
+    }
+
+}
+
 extension WalletCoordinator: ImportWalletViewControllerDelegate {
+    
+    func openQRCode(in controller: ImportWalletViewController) {
+        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
+            navigationController.promptUserOpenSettingsToChangeCameraPermission()
+            return
+        }
+
+        let coordinator = ScanQRCodeCoordinator(navigationController: NavigationController())
+        coordinator.delegate = self
+        addCoordinator(coordinator)
+        coordinator.start()
+
+        navigationController.present(coordinator.navigationController, animated: true, completion: nil)
+    }
+    
     func didImportAccount(account: Wallet, in viewController: ImportWalletViewController) {
         config.addToWalletAddressesAlreadyPromptedForBackup(address: account.address)
         didCreateAccount(account: account)
