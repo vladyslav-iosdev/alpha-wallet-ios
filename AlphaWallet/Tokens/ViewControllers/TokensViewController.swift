@@ -220,6 +220,7 @@ class TokensViewController: UIViewController {
     }
 
     private func reloadTableData() {
+        updateTableViewBackground()
         tableView.reloadData()
     }
 
@@ -378,7 +379,7 @@ extension TokensViewController: UITableViewDataSource {
     }
 
     func numberOfSections(in tableView: UITableView) -> Int {
-        sections.count
+        return sections.count
     }
 
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
@@ -414,6 +415,14 @@ extension TokensViewController: UITableViewDataSource {
         configuration.performsFirstActionWithFullSwipe = true
 
         return configuration
+    }
+    
+    private func updateTableViewBackground() {
+        if tableView.contentSize.height < tableView.frame.height {
+            tableView.backgroundView?.backgroundColor = viewModel.backgroundColor
+        } else {
+            tableView.backgroundView?.backgroundColor = GroupedTable.Color.background
+        }
     }
 }
 
