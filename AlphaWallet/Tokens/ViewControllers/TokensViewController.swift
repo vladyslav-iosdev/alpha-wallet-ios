@@ -220,8 +220,8 @@ class TokensViewController: UIViewController {
     }
 
     private func reloadTableData() {
-        updateTableViewBackground()
         tableView.reloadData()
+        updateTableViewBackground()
     }
 
     private func reload() {
@@ -417,7 +417,7 @@ extension TokensViewController: UITableViewDataSource {
 
         return configuration
     }
-    
+
     private func updateTableViewBackground() {
         if tableView.contentSize.height < tableView.frame.height {
             tableView.backgroundView?.backgroundColor = viewModel.backgroundColor
