@@ -423,7 +423,7 @@ extension TokensViewController: UITableViewDataSource {
         } else {
             tableView.backgroundView?.backgroundColor = GroupedTable.Color.background
         }
-    }
+    } 
 }
 
 extension TokensViewController: SegmentedControlDelegate {
