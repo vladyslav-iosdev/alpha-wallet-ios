@@ -369,6 +369,7 @@ extension TokensViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        updateTableViewBackground()
         let section = sections[section]
         switch section {
         case .addHideToken:
@@ -423,7 +424,7 @@ extension TokensViewController: UITableViewDataSource {
         } else {
             tableView.backgroundView?.backgroundColor = GroupedTable.Color.background
         }
-    } 
+    }
 }
 
 extension TokensViewController: SegmentedControlDelegate {
