@@ -122,7 +122,7 @@ extension SendCoordinator: ScanQRCodeCoordinatorDelegate {
 extension SendCoordinator: SendViewControllerDelegate {
     
     func openQRCode(in controller: SendViewController) {
-        guard navigationController.requestDeviceAuthorization() else { return }
+        guard navigationController.ensureHasDeviceAuthorization() else { return }
 
         let coordinator = ScanQRCodeCoordinator(navigationController: navigationController)
         coordinator.delegate = self

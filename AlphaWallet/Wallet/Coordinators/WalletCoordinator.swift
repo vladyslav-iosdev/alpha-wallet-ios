@@ -162,7 +162,7 @@ extension WalletCoordinator: ScanQRCodeCoordinatorDelegate {
 extension WalletCoordinator: ImportWalletViewControllerDelegate {
     
     func openQRCode(in controller: ImportWalletViewController) {
-        guard navigationController.requestDeviceAuthorization() else { return }
+        guard navigationController.ensureHasDeviceAuthorization() else { return }
 
         let coordinator = ScanQRCodeCoordinator(navigationController: navigationController)
         coordinator.delegate = self

@@ -280,7 +280,7 @@ extension TokensCoordinator: ScanQRCodeCoordinatorDelegate {
 extension TokensCoordinator: NewTokenViewControllerDelegate {
     
     func openQRCode(in controller: NewTokenViewController) {
-        guard navigationController.requestDeviceAuthorization() else { return }
+        guard navigationController.ensureHasDeviceAuthorization() else { return }
 
         let coordinator = ScanQRCodeCoordinator(navigationController: navigationController)
         coordinator.delegate = self
