@@ -2,7 +2,6 @@
 
 import Foundation
 import UIKit
-import AVFoundation
 
 protocol WalletCoordinatorDelegate: class {
     func didFinish(with account: Wallet, in coordinator: WalletCoordinator)
@@ -163,17 +162,12 @@ extension WalletCoordinator: ScanQRCodeCoordinatorDelegate {
 extension WalletCoordinator: ImportWalletViewControllerDelegate {
     
     func openQRCode(in controller: ImportWalletViewController) {
-        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
-            navigationController.promptUserOpenSettingsToChangeCameraPermission()
-            return
-        }
+        guard navigationController.requestDeviceAuthorization() else { return }
 
-        let coordinator = ScanQRCodeCoordinator(navigationController: NavigationController())
+        let coordinator = ScanQRCodeCoordinator(navigationController: navigationController)
         coordinator.delegate = self
         addCoordinator(coordinator)
         coordinator.start()
-
-        navigationController.present(coordinator.navigationController, animated: true, completion: nil)
     }
     
     func didImportAccount(account: Wallet, in viewController: ImportWalletViewController) {

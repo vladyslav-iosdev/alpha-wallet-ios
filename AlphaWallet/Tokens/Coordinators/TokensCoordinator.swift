@@ -3,7 +3,6 @@
 import Foundation
 import UIKit
 import PromiseKit
-import AVFoundation
 
 protocol TokensCoordinatorDelegate: class, CanOpenURL {
     func didPress(for type: PaymentFlow, server: RPCServer, in coordinator: TokensCoordinator)
@@ -281,17 +280,12 @@ extension TokensCoordinator: ScanQRCodeCoordinatorDelegate {
 extension TokensCoordinator: NewTokenViewControllerDelegate {
     
     func openQRCode(in controller: NewTokenViewController) {
-        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
-            navigationController.promptUserOpenSettingsToChangeCameraPermission()
-            return
-        }
+        guard navigationController.requestDeviceAuthorization() else { return }
 
-        let coordinator = ScanQRCodeCoordinator(navigationController: NavigationController())
+        let coordinator = ScanQRCodeCoordinator(navigationController: navigationController)
         coordinator.delegate = self
         addCoordinator(coordinator)
         coordinator.start()
-
-        navigationController.present(coordinator.navigationController, animated: true, completion: nil)
     }
     
     func didAddToken(token: ERCToken, in viewController: NewTokenViewController) {

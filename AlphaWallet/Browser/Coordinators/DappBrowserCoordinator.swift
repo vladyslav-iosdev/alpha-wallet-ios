@@ -2,8 +2,7 @@
 
 import Foundation
 import UIKit
-import BigInt
-import AVFoundation
+import BigInt 
 import RealmSwift
 import WebKit
 
@@ -363,17 +362,12 @@ final class DappBrowserCoordinator: NSObject, Coordinator {
     }
 
     private func scanQrCode() {
-        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
-            navigationController.promptUserOpenSettingsToChangeCameraPermission()
-            return
-        }
+        guard navigationController.requestDeviceAuthorization() else { return }
 
-        let coordinator = ScanQRCodeCoordinator(navigationController: NavigationController())
+        let coordinator = ScanQRCodeCoordinator(navigationController: navigationController)
         coordinator.delegate = self
         addCoordinator(coordinator)
         coordinator.start()
-        
-        navigationController.present(coordinator.navigationController, animated: true, completion: nil)
     }
 
     private func showServers() {
@@ -706,13 +700,12 @@ extension DappBrowserCoordinator: EditMyDappViewControllerDelegate {
 
 extension DappBrowserCoordinator: ScanQRCodeCoordinatorDelegate {
     func didCancel(in coordinator: ScanQRCodeCoordinator) {
-        coordinator.navigationController.dismiss(animated: true, completion: nil)
         removeCoordinator(coordinator)
     }
 
     func didScan(result: String, in coordinator: ScanQRCodeCoordinator) {
-        coordinator.navigationController.dismiss(animated: true, completion: nil)
         removeCoordinator(coordinator)
+        
         guard let url = URL(string: result) else { return }
         open(url: url, animated: false)
     }

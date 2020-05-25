@@ -10,8 +10,7 @@ import UIKit
 import Result
 import SafariServices
 import MessageUI
-import BigInt
-import AVFoundation
+import BigInt 
 
 protocol TokensCardCoordinatorDelegate: class, CanOpenURL {
     func didCancel(in coordinator: TokensCardCoordinator)
@@ -621,10 +620,11 @@ extension TokensCardCoordinator: GenerateTransferMagicLinkViewControllerDelegate
 extension TokensCardCoordinator: ScanQRCodeCoordinatorDelegate {
     
     func didCancel(in coordinator: ScanQRCodeCoordinator) {
-        
+        removeCoordinator(coordinator)
     }
     
     func didScan(result: String, in coordinator: ScanQRCodeCoordinator) {
+        removeCoordinator(coordinator)
         transferTokensViewController?.didScanQRCode(result)
     }
 }
@@ -632,17 +632,12 @@ extension TokensCardCoordinator: ScanQRCodeCoordinatorDelegate {
 extension TokensCardCoordinator: TransferTokensCardViaWalletAddressViewControllerDelegate {
     
     func openQRCode(in controller: TransferTokensCardViaWalletAddressViewController) {
-        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
-            navigationController.promptUserOpenSettingsToChangeCameraPermission()
-            return
-        }
+        guard navigationController.requestDeviceAuthorization() else { return }
 
-        let coordinator = ScanQRCodeCoordinator(navigationController: NavigationController())
+        let coordinator = ScanQRCodeCoordinator(navigationController: navigationController)
         coordinator.delegate = self
         addCoordinator(coordinator)
         coordinator.start()
-
-        navigationController.present(coordinator.navigationController, animated: true, completion: nil)
     }
     
     func didEnterWalletAddress(tokenHolder: TokenHolder, to walletAddress: AlphaWallet.Address, paymentFlow: PaymentFlow, in viewController: TransferTokensCardViaWalletAddressViewController) {

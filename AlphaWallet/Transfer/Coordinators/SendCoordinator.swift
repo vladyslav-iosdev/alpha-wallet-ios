@@ -4,7 +4,6 @@ import Foundation
 import UIKit
 import BigInt
 import PromiseKit
-import AVFoundation
 
 protocol SendCoordinatorDelegate: class, CanOpenURL {
     func didFinish(_ result: ConfirmResult, in coordinator: SendCoordinator)
@@ -111,10 +110,11 @@ class SendCoordinator: Coordinator {
 extension SendCoordinator: ScanQRCodeCoordinatorDelegate {
     
     func didCancel(in coordinator: ScanQRCodeCoordinator) {
-        
+        removeCoordinator(coordinator)
     }
     
     func didScan(result: String, in coordinator: ScanQRCodeCoordinator) {
+        removeCoordinator(coordinator)
         sendViewController.didScanQRCode(result)
     }
 }
@@ -122,17 +122,12 @@ extension SendCoordinator: ScanQRCodeCoordinatorDelegate {
 extension SendCoordinator: SendViewControllerDelegate {
     
     func openQRCode(in controller: SendViewController) {
-        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
-            navigationController.promptUserOpenSettingsToChangeCameraPermission()
-            return
-        }
+        guard navigationController.requestDeviceAuthorization() else { return }
 
-        let coordinator = ScanQRCodeCoordinator(navigationController: NavigationController())
+        let coordinator = ScanQRCodeCoordinator(navigationController: navigationController)
         coordinator.delegate = self
         addCoordinator(coordinator)
         coordinator.start()
-
-        navigationController.present(coordinator.navigationController, animated: true, completion: nil)
     }
     
     func didPressConfirm(transaction: UnconfirmedTransaction, transferType: TransferType, in viewController: SendViewController) {
