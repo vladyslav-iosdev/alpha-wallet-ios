@@ -150,17 +150,17 @@ extension WalletCoordinator: ScanQRCodeCoordinatorDelegate {
     func didCancel(in coordinator: ScanQRCodeCoordinator) {
         removeCoordinator(coordinator)
     }
-    
+
     func didScan(result: String, in coordinator: ScanQRCodeCoordinator) {
         removeCoordinator(coordinator)
-        
+
         importWalletViewController?.didScanQRCode(result)
     }
 
 }
 
 extension WalletCoordinator: ImportWalletViewControllerDelegate {
-    
+ 
     func openQRCode(in controller: ImportWalletViewController) {
         guard navigationController.ensureHasDeviceAuthorization() else { return }
 
@@ -169,7 +169,7 @@ extension WalletCoordinator: ImportWalletViewControllerDelegate {
         addCoordinator(coordinator)
         coordinator.start()
     }
-    
+
     func didImportAccount(account: Wallet, in viewController: ImportWalletViewController) {
         config.addToWalletAddressesAlreadyPromptedForBackup(address: account.address)
         didCreateAccount(account: account)

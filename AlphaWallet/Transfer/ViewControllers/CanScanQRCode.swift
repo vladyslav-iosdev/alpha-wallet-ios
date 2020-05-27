@@ -8,7 +8,7 @@ protocol CanScanQRCode: class {
 }
 
 extension CanScanQRCode where Self: UIViewController {
-    
+
     func ensureHasDeviceAuthorization() -> Bool {
         guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
             promptUserOpenSettingsToChangeCameraPermission()

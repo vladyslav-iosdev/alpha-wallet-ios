@@ -30,6 +30,7 @@ class TokensCardCoordinator: NSObject, Coordinator {
     private let assetDefinitionStore: AssetDefinitionStore
     private weak var transferTokensViewController: TransferTokensCardViaWalletAddressViewController?
     private let eventsDataStore: EventsDataStoreProtocol
+    private weak var transferTokensViewController: TransferTokensCardViaWalletAddressViewController?
 
     weak var delegate: TokensCardCoordinatorDelegate?
     let navigationController: NavigationController
@@ -618,11 +619,11 @@ extension TokensCardCoordinator: GenerateTransferMagicLinkViewControllerDelegate
 }
 
 extension TokensCardCoordinator: ScanQRCodeCoordinatorDelegate {
-    
+
     func didCancel(in coordinator: ScanQRCodeCoordinator) {
         removeCoordinator(coordinator)
     }
-    
+
     func didScan(result: String, in coordinator: ScanQRCodeCoordinator) {
         removeCoordinator(coordinator)
         transferTokensViewController?.didScanQRCode(result)
@@ -630,7 +631,7 @@ extension TokensCardCoordinator: ScanQRCodeCoordinatorDelegate {
 }
 
 extension TokensCardCoordinator: TransferTokensCardViaWalletAddressViewControllerDelegate {
-    
+
     func openQRCode(in controller: TransferTokensCardViaWalletAddressViewController) {
         guard navigationController.ensureHasDeviceAuthorization() else { return }
 

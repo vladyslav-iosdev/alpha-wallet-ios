@@ -194,11 +194,11 @@ extension TransferTokensCardViaWalletAddressViewController: VerifiableStatusView
 
     func open(url: URL) {
         delegate?.didPressViewContractWebPage(url, in: self)
-    }
-} 
+    } 
+}
 
 extension TransferTokensCardViaWalletAddressViewController: AddressTextFieldDelegate {
-    
+
     func didScanQRCode(_ result: String) {
         guard let result = QRCodeValueParser.from(string: result) else { return }
         switch result {

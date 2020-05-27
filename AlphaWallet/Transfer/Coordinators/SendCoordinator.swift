@@ -112,7 +112,7 @@ extension SendCoordinator: ScanQRCodeCoordinatorDelegate {
     func didCancel(in coordinator: ScanQRCodeCoordinator) {
         removeCoordinator(coordinator)
     }
-    
+
     func didScan(result: String, in coordinator: ScanQRCodeCoordinator) {
         removeCoordinator(coordinator)
         sendViewController.didScanQRCode(result)
@@ -129,7 +129,7 @@ extension SendCoordinator: SendViewControllerDelegate {
         addCoordinator(coordinator)
         coordinator.start()
     }
-    
+
     func didPressConfirm(transaction: UnconfirmedTransaction, transferType: TransferType, in viewController: SendViewController) {
 
         let configurator = TransactionConfigurator(

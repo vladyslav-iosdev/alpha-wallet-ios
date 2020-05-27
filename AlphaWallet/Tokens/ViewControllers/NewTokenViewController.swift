@@ -387,7 +387,7 @@ class NewTokenViewController: UIViewController {
 }
 
 extension NewTokenViewController: AddressTextFieldDelegate {
-    
+
     func didScanQRCode(_ result: String) {
         guard let result = QRCodeValueParser.from(string: result) else { return }
         switch result {
@@ -403,7 +403,7 @@ extension NewTokenViewController: AddressTextFieldDelegate {
     }
 
     func openQRCodeReader(for textField: AddressTextField) {
-        delegate?.openQRCode(in: self) 
+        delegate?.openQRCode(in: self)
     }
 
     func didPaste(in textField: AddressTextField) {

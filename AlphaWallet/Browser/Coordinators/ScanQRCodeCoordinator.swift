@@ -14,7 +14,6 @@ final class ScanQRCodeCoordinator: NSObject, Coordinator {
 
     lazy var qrcodeController: QRCodeReaderViewController = {
         let reader = QRCodeReader(metadataObjectTypes: [AVMetadataObject.ObjectType.qr])
-
         let controller = QRCodeReaderViewController(
             cancelButtonTitle: nil,
             codeReader: reader,
@@ -58,7 +57,7 @@ final class ScanQRCodeCoordinator: NSObject, Coordinator {
 }
 
 extension ScanQRCodeCoordinator: QRCodeReaderDelegate {
-    
+
     func readerDidCancel(_ reader: QRCodeReaderViewController!) {
         reader.stopScanning()
         navigationController.dismiss(animated: true)
