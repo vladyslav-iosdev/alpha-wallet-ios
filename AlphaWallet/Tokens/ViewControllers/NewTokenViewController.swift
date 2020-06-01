@@ -1,12 +1,13 @@
 // Copyright SIX DAY LLC. All rights reserved.
 
 import Foundation
-import QRCodeReaderViewController
+import UIKit
 
 protocol NewTokenViewControllerDelegate: class {
     func didAddToken(token: ERCToken, in viewController: NewTokenViewController)
     func didAddAddress(address: AlphaWallet.Address, in viewController: NewTokenViewController)
     func didTapChangeServer(in viewController: NewTokenViewController)
+    func openQRCode(in controller: NewTokenViewController)
 }
 
 enum RPCServerOrAuto: Hashable {
@@ -32,7 +33,7 @@ enum RPCServerOrAuto: Hashable {
     }
 }
 
-class NewTokenViewController: UIViewController, CanScanQRCode {
+class NewTokenViewController: UIViewController {
     private let roundedBackground = RoundedBackground()
     private let scrollView = UIScrollView()
     private let footerBar = UIView()
@@ -72,7 +73,7 @@ class NewTokenViewController: UIViewController, CanScanQRCode {
 
         addressTextField.delegate = self
         addressTextField.returnKeyType = .next
-        
+
         symbolTextField.delegate = self
         symbolTextField.returnKeyType = .next
 
@@ -101,40 +102,40 @@ class NewTokenViewController: UIViewController, CanScanQRCode {
         addressControlsStackView.translatesAutoresizingMaskIntoConstraints = false
 
         addressControlsContainer.addSubview(addressControlsStackView)
-        
+
         let stackView = [
             header,
             addressTextField.label,
             .spacer(height: 4),
             addressTextField,
-            
+
             .spacer(height: 4), [
                 [addressTextField.ensAddressLabel, addressTextField.statusLabel].asStackView(axis: .horizontal, alignment: .leading),
                 addressControlsContainer
             ].asStackView(axis: .horizontal),
             .spacer(height: 4),
-            
+
             symbolTextField.label,
             .spacer(height: 4),
             symbolTextField,
             .spacer(height: 4),
             symbolTextField.statusLabel,
-            
+
             .spacer(height: 10),
-            
+
             decimalsTextField.label,
             .spacer(height: 4),
             decimalsTextField,
             .spacer(height: 4),
             decimalsTextField.statusLabel,
-            
+
             balanceTextField.label,
             .spacer(height: 4),
             balanceTextField,
             .spacer(height: 4),
             balanceTextField.statusLabel,
             .spacer(height: 6),
-            
+
             nameTextField.label,
             .spacer(height: 4),
             nameTextField,
@@ -146,7 +147,7 @@ class NewTokenViewController: UIViewController, CanScanQRCode {
         scrollView.addSubview(stackView)
 
         buttonsBar.buttons[0].isEnabled = true
-        
+
         footerBar.translatesAutoresizingMaskIntoConstraints = false
         footerBar.backgroundColor = .clear
         roundedBackground.addSubview(footerBar)
@@ -180,13 +181,13 @@ class NewTokenViewController: UIViewController, CanScanQRCode {
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollViewBottomAnchorConstraint,
-            
+
             addressControlsStackView.trailingAnchor.constraint(equalTo: addressControlsContainer.trailingAnchor),
             addressControlsStackView.topAnchor.constraint(equalTo: addressControlsContainer.topAnchor),
             addressControlsStackView.bottomAnchor.constraint(equalTo: addressControlsContainer.bottomAnchor),
             addressControlsStackView.leadingAnchor.constraint(greaterThanOrEqualTo: addressControlsContainer.leadingAnchor),
             addressControlsContainer.heightAnchor.constraint(equalToConstant: 30)
-            
+
         ] + roundedBackground.createConstraintsWithContainer(view: view))
 
         configure()
@@ -281,7 +282,7 @@ class NewTokenViewController: UIViewController, CanScanQRCode {
 
     private func validate() -> Bool {
         var isValid: Bool = true
-        
+
         if addressTextField.value.trimmed.isEmpty {
             let error = ValidationError(msg: R.string.localizable.warningFieldRequired())
             addressTextField.errorState = .error(error.prettyError)
@@ -289,7 +290,7 @@ class NewTokenViewController: UIViewController, CanScanQRCode {
         } else {
             addressTextField.errorState = .none
         }
-        
+
         if nameTextField.value.trimmed.isEmpty {
             let error = ValidationError(msg: R.string.localizable.warningFieldRequired())
             nameTextField.status = .error(error.prettyError)
@@ -297,7 +298,7 @@ class NewTokenViewController: UIViewController, CanScanQRCode {
         } else {
             nameTextField.status = .none
         }
-        
+
         if symbolTextField.value.trimmed.isEmpty {
             let error = ValidationError(msg: R.string.localizable.warningFieldRequired())
             symbolTextField.status = .error(error.prettyError)
@@ -305,11 +306,11 @@ class NewTokenViewController: UIViewController, CanScanQRCode {
         } else {
             symbolTextField.status = .none
         }
-        
+
         if let tokenType = tokenType {
             decimalsTextField.status = .none
             balanceTextField.status = .none
-            
+
             switch tokenType {
             case .nativeCryptocurrency, .erc20:
                 if decimalsTextField.value.trimmed.isEmpty {
@@ -322,7 +323,7 @@ class NewTokenViewController: UIViewController, CanScanQRCode {
                     let error = ValidationError(msg: R.string.localizable.warningFieldRequired())
                     balanceTextField.status = .error(error.prettyError)
                     isValid = false
-                } 
+                }
             }
         } else {
             isValid = false
@@ -354,7 +355,7 @@ class NewTokenViewController: UIViewController, CanScanQRCode {
             return
         }
         addressTextField.errorState = .none
-        
+
         if balance.isEmpty {
             balance.append("0")
         }
@@ -434,16 +435,8 @@ class NewTokenViewController: UIViewController, CanScanQRCode {
     }
 }
 
-extension NewTokenViewController: QRCodeReaderDelegate {
-    func readerDidCancel(_ reader: QRCodeReaderViewController!) {
-        reader.stopScanning()
-        reader.dismiss(animated: true, completion: nil)
-    }
-
-    func reader(_ reader: QRCodeReaderViewController!, didScanResult result: String!) {
-        reader.stopScanning()
-        reader.dismiss(animated: true, completion: nil)
-
+extension NewTokenViewController: AddressTextFieldDelegate {
+    func didScanQRCode(_ result: String) {
         guard let result = QRCodeValueParser.from(string: result) else { return }
         switch result {
         case .address(let address):
@@ -452,23 +445,13 @@ extension NewTokenViewController: QRCodeReaderDelegate {
             break
         }
     }
-}
 
-extension NewTokenViewController: AddressTextFieldDelegate {
-    
     func displayError(error: Error, for textField: AddressTextField) {
         textField.errorState = .error(error.prettyError)
     }
 
     func openQRCodeReader(for textField: AddressTextField) {
-        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
-            promptUserOpenSettingsToChangeCameraPermission()
-            return
-        }
-        let controller = QRCodeReaderViewController(cancelButtonTitle: nil, chooseFromPhotoLibraryButtonTitle: R.string.localizable.photos())
-        controller.delegate = self
-        controller.makePresentationFullScreenForiOS13Migration()
-        present(controller, animated: true, completion: nil)
+        delegate?.openQRCode(in: self)
     }
 
     func didPaste(in textField: AddressTextField) {

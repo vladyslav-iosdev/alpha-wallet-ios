@@ -6,7 +6,6 @@ import UIKit
 import JSONRPCKit
 import APIKit
 import PromiseKit
-import QRCodeReaderViewController
 import BigInt
 import MBProgressHUD
 
@@ -17,6 +16,7 @@ protocol SendViewControllerDelegate: class, CanOpenURL {
             in viewController: SendViewController
     )
     func lookup(contract: AlphaWallet.Address, in viewController: SendViewController, completion: @escaping (ContractData) -> Void)
+    func openQRCode(in controller: SendViewController)
 }
 
 class SendViewController: UIViewController, CanScanQRCode {
@@ -76,14 +76,14 @@ class SendViewController: UIViewController, CanScanQRCode {
         targetAddressTextField.translatesAutoresizingMaskIntoConstraints = false
         targetAddressTextField.delegate = self
         targetAddressTextField.returnKeyType = .next
-        
+
         amountTextField.translatesAutoresizingMaskIntoConstraints = false
         amountTextField.delegate = self
 
         let addressControlsContainer = UIView()
         addressControlsContainer.translatesAutoresizingMaskIntoConstraints = false
         addressControlsContainer.backgroundColor = .clear
-        
+
         let addressControlsStackView = [
             targetAddressTextField.pasteButton,
             targetAddressTextField.clearButton
@@ -91,9 +91,9 @@ class SendViewController: UIViewController, CanScanQRCode {
         addressControlsStackView.translatesAutoresizingMaskIntoConstraints = false
         addressControlsStackView.setContentHuggingPriority(.required, for: .horizontal)
         addressControlsStackView.setContentCompressionResistancePriority(.required, for: .horizontal)
-        
+
         addressControlsContainer.addSubview(addressControlsStackView)
-        
+
         let stackView = [
             header,
             .spacer(height: ScreenChecker().isNarrowScreen ? 7 : 14),
@@ -109,7 +109,7 @@ class SendViewController: UIViewController, CanScanQRCode {
             .spacer(height: 4), [
                 [targetAddressTextField.ensAddressLabel, targetAddressTextField.statusLabel].asStackView(axis: .horizontal, alignment: .leading),
                 addressControlsContainer
-            ].asStackView(axis: .horizontal), 
+            ].asStackView(axis: .horizontal),
         ].asStackView(axis: .vertical)
         stackView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(stackView)
@@ -151,13 +151,13 @@ class SendViewController: UIViewController, CanScanQRCode {
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.bottomAnchor.constraint(equalTo: footerBar.topAnchor),
-            
+
             addressControlsStackView.trailingAnchor.constraint(equalTo: addressControlsContainer.trailingAnchor),
             addressControlsStackView.topAnchor.constraint(equalTo: addressControlsContainer.topAnchor),
             addressControlsStackView.bottomAnchor.constraint(equalTo: addressControlsContainer.bottomAnchor),
             addressControlsStackView.leadingAnchor.constraint(greaterThanOrEqualTo: addressControlsContainer.leadingAnchor),
             addressControlsContainer.heightAnchor.constraint(equalToConstant: 30)
-            
+
         ] + roundedBackground.createConstraintsWithContainer(view: view))
 
         storage.updatePrices()
@@ -237,12 +237,12 @@ class SendViewController: UIViewController, CanScanQRCode {
     @objc func send() {
         let input = targetAddressTextField.value.trimmed
         self.targetAddressTextField.errorState = .none
-        
+
         guard let address = AlphaWallet.Address(string: input) else {
             self.targetAddressTextField.errorState = .error(Errors.invalidAddress.prettyError)
             return
         }
-        
+
         let amountString = amountTextField.ethCost
         let parsedValue: BigInt? = {
             switch transferType {
@@ -260,12 +260,22 @@ class SendViewController: UIViewController, CanScanQRCode {
                 return EtherNumberFormatter.full.number(from: amountString, decimals: token.decimals)
             }
         }()
-        guard let value = parsedValue else {
+
+        guard let value = parsedValue, value > 0 else {
             return displayError(error: SendInputErrors.wrongInput)
         }
 
-        if case .nativeCryptocurrency = transferType, let balance = session.balance, balance.value < value {
-            return displayError(title: R.string.localizable.aSendBalanceInsufficient(), error: Errors.invalidAmount)
+        switch transferType {
+        case .nativeCryptocurrency:
+            if let balance = session.balance, balance.value < value {
+                return displayError(title: R.string.localizable.aSendBalanceInsufficient(), error: Errors.invalidAmount)
+            }
+        case .ERC20Token(let token, _, _):
+            if let tokenBalance = storage.token(forContract: token.contractAddress)?.valueBigInt, tokenBalance < value {
+                return displayError(title: R.string.localizable.aSendBalanceInsufficient(), error: Errors.invalidAmount)
+            }
+        case .dapp, .ERC721ForTicketToken, .ERC721Token, .ERC875Token, .ERC875TokenOrder:
+            break
         }
 
         let transaction = UnconfirmedTransaction(
@@ -337,19 +347,10 @@ class SendViewController: UIViewController, CanScanQRCode {
             break
         }
     }
-}
 
-extension SendViewController: QRCodeReaderDelegate {
-    func readerDidCancel(_ reader: QRCodeReaderViewController!) {
-        reader.stopScanning()
-        reader.dismiss(animated: true, completion: nil)
-    }
+    func didScanQRCode(_ result: String) {
+        self.activateAmountView()
 
-    func reader(_ reader: QRCodeReaderViewController!, didScanResult result: String!) {
-        reader.stopScanning()
-        reader.dismiss(animated: true) { [weak self] in
-            self?.activateAmountView()
-        }
         guard let result = QRCodeValueParser.from(string: result) else { return }
         switch result {
         case .address(let recipient):
@@ -445,21 +446,13 @@ extension SendViewController: AmountTextFieldDelegate {
 }
 
 extension SendViewController: AddressTextFieldDelegate {
-    
+
     func displayError(error: Error, for textField: AddressTextField) {
         textField.errorState = .error(error.prettyError)
     }
 
     func openQRCodeReader(for textField: AddressTextField) {
-        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
-            promptUserOpenSettingsToChangeCameraPermission()
-            return
-        }
-        
-        let controller = QRCodeReaderViewController(cancelButtonTitle: nil, chooseFromPhotoLibraryButtonTitle: R.string.localizable.photos())
-        controller.delegate = self
-        controller.makePresentationFullScreenForiOS13Migration()
-        present(controller, animated: true, completion: nil)
+        delegate?.openQRCode(in: self)
     }
 
     func didPaste(in textField: AddressTextField) {

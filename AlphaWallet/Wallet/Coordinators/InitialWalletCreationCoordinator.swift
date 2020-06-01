@@ -19,7 +19,7 @@ class InitialWalletCreationCoordinator: Coordinator {
 
     init(
         config: Config,
-        navigationController: UINavigationController = NavigationController(),
+        navigationController: UINavigationController = UINavigationController(),
         keystore: Keystore,
         entryPoint: WalletEntryPoint
     ) {

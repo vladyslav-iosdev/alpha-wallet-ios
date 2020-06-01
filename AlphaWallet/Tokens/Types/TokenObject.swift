@@ -18,7 +18,8 @@ class TokenObject: Object {
     @objc dynamic var value: String = ""
     @objc dynamic var isDisabled: Bool = false
     @objc dynamic var rawType: String = TokenType.erc20.rawValue
-
+    @objc dynamic var shouldDisplay: Bool = true
+    var sortIndex = RealmOptional<Int>()
     let balance = List<TokenBalance>()
 
     var nonZeroBalance: [TokenBalance] {
@@ -84,7 +85,7 @@ class TokenObject: Object {
     }
 
     func title(withAssetDefinitionStore assetDefinitionStore: AssetDefinitionStore) -> String {
-        let localizedNameFromAssetDefinition = XMLHandler(contract: contractAddress, assetDefinitionStore: assetDefinitionStore).getName(fallback: name)
+        let localizedNameFromAssetDefinition = XMLHandler(contract: contractAddress, assetDefinitionStore: assetDefinitionStore).getLabel(fallback: name)
         return title(withAssetDefinitionStore: assetDefinitionStore, localizedNameFromAssetDefinition: localizedNameFromAssetDefinition)
     }
 

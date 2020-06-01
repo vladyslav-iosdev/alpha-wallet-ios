@@ -107,7 +107,27 @@ class SendCoordinator: Coordinator {
     }
 }
 
+extension SendCoordinator: ScanQRCodeCoordinatorDelegate {
+    func didCancel(in coordinator: ScanQRCodeCoordinator) {
+        removeCoordinator(coordinator)
+    }
+
+    func didScan(result: String, in coordinator: ScanQRCodeCoordinator) {
+        removeCoordinator(coordinator)
+        sendViewController.didScanQRCode(result)
+    }
+}
+
 extension SendCoordinator: SendViewControllerDelegate {
+    func openQRCode(in controller: SendViewController) {
+        guard navigationController.ensureHasDeviceAuthorization() else { return }
+
+        let coordinator = ScanQRCodeCoordinator(navigationController: navigationController)
+        coordinator.delegate = self
+        addCoordinator(coordinator)
+        coordinator.start()
+    }
+
     func didPressConfirm(transaction: UnconfirmedTransaction, transferType: TransferType, in viewController: SendViewController) {
 
         let configurator = TransactionConfigurator(

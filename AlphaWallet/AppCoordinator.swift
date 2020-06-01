@@ -44,7 +44,7 @@ class AppCoordinator: NSObject, Coordinator {
     init(
         window: UIWindow,
         keystore: Keystore,
-        navigationController: UINavigationController = NavigationController()
+        navigationController: UINavigationController = UINavigationController()
     ) {
         self.navigationController = navigationController
         self.keystore = keystore

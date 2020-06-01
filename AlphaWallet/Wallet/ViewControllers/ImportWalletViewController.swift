@@ -1,11 +1,11 @@
 // Copyright © 2018 Stormbird PTE. LTD.
 
 import UIKit
-import QRCodeReaderViewController
 import TrustWalletCore
 
 protocol ImportWalletViewControllerDelegate: class {
     func didImportAccount(account: Wallet, in viewController: ImportWalletViewController)
+    func openQRCode(in controller: ImportWalletViewController)
 }
 
 // swiftlint:disable type_body_length
@@ -123,11 +123,11 @@ class ImportWalletViewController: UIViewController, CanScanQRCode {
         privateKeyTextView.returnKeyType = .done
         privateKeyTextView.textView.autocorrectionType = .no
         privateKeyTextView.textView.autocapitalizationType = .none
-        
+
         watchAddressTextField.translatesAutoresizingMaskIntoConstraints = false
         watchAddressTextField.delegate = self
         watchAddressTextField.returnKeyType = .done
-        
+
         mnemonicControlsStackView = [
             mnemonicTextView.label,
             .spacer(height: 4),
@@ -164,25 +164,25 @@ class ImportWalletViewController: UIViewController, CanScanQRCode {
         let addressControlsContainer = UIView()
         addressControlsContainer.translatesAutoresizingMaskIntoConstraints = false
         addressControlsContainer.backgroundColor = .clear
-        
+
         let addressControlsStackView = [
             watchAddressTextField.pasteButton,
             watchAddressTextField.clearButton
         ].asStackView(axis: .horizontal)
         addressControlsStackView.translatesAutoresizingMaskIntoConstraints = false
-        
+
         addressControlsContainer.addSubview(addressControlsStackView)
-        
+
         watchControlsStackView = [
             watchAddressTextField.label,
             .spacer(height: 4),
-            watchAddressTextField,  
+            watchAddressTextField,
             .spacer(height: 4), [
                 [watchAddressTextField.ensAddressLabel, watchAddressTextField.statusLabel].asStackView(axis: .horizontal, alignment: .leading),
                 addressControlsContainer
             ].asStackView(axis: .horizontal),
             .spacer(height: 4),
-            
+
         ].asStackView(axis: .vertical)
         watchControlsStackView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -266,7 +266,7 @@ class ImportWalletViewController: UIViewController, CanScanQRCode {
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.bottomAnchor.constraint(equalTo: footerBar.topAnchor),
-            
+
             addressControlsStackView.trailingAnchor.constraint(equalTo: addressControlsContainer.trailingAnchor),
             addressControlsStackView.topAnchor.constraint(equalTo: addressControlsContainer.topAnchor),
             addressControlsStackView.bottomAnchor.constraint(equalTo: addressControlsContainer.bottomAnchor),
@@ -384,13 +384,13 @@ class ImportWalletViewController: UIViewController, CanScanQRCode {
     ///Returns true only if valid
     private func validateMnemonic() -> Bool {
         mnemonicTextView.errorState = .none
-        
-        if let validationError = MnemonicLengthRule().isValid(value: mnemonicTextView.value) {
+
+        if let validationError = MnemonicLengthRule().isValid(value: mnemonicInputString) {
             mnemonicTextView.errorState = .error(validationError.msg)
-            
+
             return false
         }
-        if let validationError = MnemonicInWordListRule().isValid(value: mnemonicTextView.value) {
+        if let validationError = MnemonicInWordListRule().isValid(value: mnemonicInputString) {
             mnemonicTextView.errorState = .error(validationError.msg)
             return false
         }
@@ -513,14 +513,7 @@ class ImportWalletViewController: UIViewController, CanScanQRCode {
     }
 
     @objc func openReader() {
-        guard AVCaptureDevice.authorizationStatus(for: .video) != .denied else {
-            promptUserOpenSettingsToChangeCameraPermission()
-            return
-        }
-        let controller = QRCodeReaderViewController(cancelButtonTitle: nil, chooseFromPhotoLibraryButtonTitle: R.string.localizable.photos())
-        controller.delegate = self
-        controller.makePresentationFullScreenForiOS13Migration()
-        present(controller, animated: true, completion: nil)
+        delegate?.openQRCode(in: self)
     }
 
     func setValueForCurrentField(string: String) {
@@ -636,20 +629,12 @@ extension ImportWalletViewController: UIDocumentPickerDelegate {
     }
 }
 
-extension ImportWalletViewController: QRCodeReaderDelegate {
-    func readerDidCancel(_ reader: QRCodeReaderViewController!) {
-        reader.stopScanning()
-        reader.dismiss(animated: true, completion: nil)
-    }
-
-    func reader(_ reader: QRCodeReaderViewController!, didScanResult result: String!) {
-        reader.stopScanning()
-        setValueForCurrentField(string: result)
-        reader.dismiss(animated: true)
-    }
-}
-
 extension ImportWalletViewController: TextFieldDelegate {
+
+    func didScanQRCode(_ result: String) {
+        setValueForCurrentField(string: result)
+    }
+
     func shouldReturn(in textField: TextField) -> Bool {
         moveFocusToTextEntryField(after: textField)
         return false
