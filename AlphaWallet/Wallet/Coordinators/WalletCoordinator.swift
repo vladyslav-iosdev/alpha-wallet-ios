@@ -48,9 +48,10 @@ class WalletCoordinator: Coordinator {
             controller.navigationItem.leftBarButtonItem = UIBarButtonItem(title: R.string.localizable.cancel(), style: .plain, target: self, action: #selector(dismiss))
             navigationController.viewControllers = [controller]
             importWalletViewController = controller
-        case .watchWallet:
+        case .watchWallet(let address):
             let controller = ImportWalletViewController(keystore: keystore, analyticsCoordinator: analyticsCoordinator)
             controller.delegate = self
+            controller.watchAddressTextField.value = address?.eip55String ?? ""
             controller.navigationItem.leftBarButtonItem = UIBarButtonItem(title: R.string.localizable.cancel(), style: .plain, target: self, action: #selector(dismiss))
             controller.showWatchTab()
             navigationController.viewControllers = [controller]
@@ -186,7 +187,7 @@ extension WalletCoordinator: CreateInitialWalletViewControllerDelegate {
     }
 
     func didTapWatchWallet(inViewController viewController: CreateInitialWalletViewController) {
-        addWalletWith(entryPoint: .watchWallet)
+        addWalletWith(entryPoint: .watchWallet(address: nil))
     }
 
     func didTapImportWallet(inViewController viewController: CreateInitialWalletViewController) {

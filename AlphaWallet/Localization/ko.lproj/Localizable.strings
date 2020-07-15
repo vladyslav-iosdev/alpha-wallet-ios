@@ -459,3 +459,9 @@
 "a.wallet.token.transaction.inProgress.title" = "Transaction in Progress";
 "a.wallet.token.transaction.inProgress.subtitle" = "The transaction is sent to the Ethereum\nblockchain. It might take few minutes\nto be confirmed by miners.";
 "a.wallet.token.transaction.inProgress.confirm" = "OK, great!";
+"qrCode.myqrCode.title" = "My QR Code";
+"qrCode.sendToAddress.title" = "Send to this Address";
+"qrCode.watchWallet.title" = "Watch Wallet";
+"qrCode.addCustomToken.title" = "Add Custom Token";
+"qrCode.openInBrowser.title" = "Open in Browser";
+"assets.selectAsset.title" = "Select Asset";

@@ -146,7 +146,7 @@ class AccountsCoordinator: Coordinator {
     }
 
     private func showWatchWallet() {
-        importOrCreateWallet(entryPoint: .watchWallet)
+        importOrCreateWallet(entryPoint: .watchWallet(address: nil))
     }
 }
 

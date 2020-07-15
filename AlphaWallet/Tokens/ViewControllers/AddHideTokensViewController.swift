@@ -16,7 +16,24 @@ class AddHideTokensViewController: UIViewController {
     private var viewModel: AddHideTokensViewModel
     private let searchController: UISearchController
     private var isSearchBarConfigured = false
-    private lazy var tableView: UITableView = UITableView(frame: .zero, style: .grouped)
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView(frame: .zero, style: .grouped)
+        tableView.register(FungibleTokenViewCell.self)
+        tableView.register(NonFungibleTokenViewCell.self)
+        tableView.register(EthTokenViewCell.self)
+        tableView.registerHeaderFooterView(AddHideTokenSectionHeaderView.self)
+        tableView.isEditing = true
+        tableView.estimatedRowHeight = 100
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.separatorStyle = .singleLine
+        tableView.separatorInset = .zero
+        tableView.contentInset = .zero
+        tableView.contentOffset = .zero
+        tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: tableView.bounds.size.width, height: 0.01))
+
+        return tableView
+    }()
     private let refreshControl = UIRefreshControl()
     private var prefersLargeTitles: Bool?
 
@@ -44,8 +61,7 @@ class AddHideTokensViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        refreshView(viewModel: viewModel)
-        setup(tableView: tableView)
+        configure(viewModel: viewModel)
         setupFilteringWithKeyword()
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: R.image.plus(), style: .plain, target: self, action: #selector(addToken))
@@ -75,6 +91,11 @@ class AddHideTokensViewController: UIViewController {
         prefersLargeTitles = nil
     }
 
+    func add(token: TokenObject) {
+        viewModel.add(token: token)
+        reload()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         configureSearchBarOnce()
@@ -84,28 +105,12 @@ class AddHideTokensViewController: UIViewController {
         delegate?.didPressAddToken(in: self)
     }
 
-    private func refreshView(viewModel: AddHideTokensViewModel) {
+    private func configure(viewModel: AddHideTokensViewModel) {
         title = viewModel.title
         tableView.backgroundColor = viewModel.backgroundColor
     }
 
-    private func setup(tableView: UITableView) {
-        tableView.register(FungibleTokenViewCell.self)
-        tableView.register(NonFungibleTokenViewCell.self)
-        tableView.register(EthTokenViewCell.self) 
-        tableView.registerHeaderFooterView(AddHideTokenSectionHeaderView.self)
-        tableView.isEditing = true
-        tableView.estimatedRowHeight = 100
-        tableView.dataSource = self
-        tableView.delegate = self
-        tableView.separatorStyle = .singleLine
-        tableView.separatorInset = .zero
-        tableView.contentInset = .zero
-        tableView.contentOffset = .zero
-        tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: tableView.bounds.size.width, height: 0.01))
-    }
-
-    func reload() {
+    private func reload() {
         tableView.reloadData()
     }
 }
