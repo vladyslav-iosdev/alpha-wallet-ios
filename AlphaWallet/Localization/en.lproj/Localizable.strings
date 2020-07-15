@@ -449,3 +449,6 @@
 "wallet.security.level.orange" = "NOT LOCKED";
 "wallet.security.level.green" = "100% SECURE";
 "wallets.showSeedPhrase.subtitle.error" = "Do not share your backup. AlphaWallet team members will not ask for it.";
+"a.wallet.token.transaction.confirmation.title" = "Supplying DAI to cDAI";
+"a.wallet.token.transaction.confirmation.subtitle" = "The transaction is sent to the Ethereum\nblockchain. It might take few minutes\nto be confirmed by miners.";
+"a.wallet.token.transaction.confirmation.confirm" = "OK, great!";
