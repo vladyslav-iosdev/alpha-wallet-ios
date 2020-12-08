@@ -87,18 +87,11 @@ class AccountsCoordinator: Coordinator {
 	}
 
     private func importOrCreateWallet(entryPoint: WalletEntryPoint) {
-        let coordinator = WalletCoordinator(config: config, keystore: keystore, analyticsCoordinator: analyticsCoordinator)
-        if case .createInstantWallet = entryPoint {
-            coordinator.navigationController = navigationController
-        }
+        let coordinator = WalletCoordinator(config: config, navigationController: navigationController, keystore: keystore, analyticsCoordinator: analyticsCoordinator)
         coordinator.delegate = self
-        addCoordinator(coordinator)
-        let showUI = coordinator.start(entryPoint)
-        if showUI {
-            coordinator.navigationController.makePresentationFullScreenForiOS13Migration()
-            navigationController.present(coordinator.navigationController, animated: true, completion: nil)
-        }
 
+        addCoordinator(coordinator)
+        coordinator.start(entryPoint)
     }
 
     private func showInfoSheet(for account: Wallet, sender: UIView) {
@@ -138,7 +131,7 @@ class AccountsCoordinator: Coordinator {
 
             controller.makePresentationFullScreenForiOS13Migration()
 
-            navigationController.present(controller, animated: true, completion: nil)
+            navigationController.present(controller, animated: true)
         case .watch:
             let renameAction = UIAlertAction(title: R.string.localizable.walletsNameRename(), style: .default) { [weak self] _ in
                 self?.promptRenameWallet(account.address)
@@ -152,7 +145,7 @@ class AccountsCoordinator: Coordinator {
             let cancelAction = UIAlertAction(title: R.string.localizable.cancel(), style: .cancel) { _ in }
             controller.addAction(cancelAction)
             controller.makePresentationFullScreenForiOS13Migration()
-            navigationController.present(controller, animated: true, completion: nil)
+            navigationController.present(controller, animated: true)
         }
     }
 
@@ -216,25 +209,23 @@ extension AccountsCoordinator: AccountsViewControllerDelegate {
 }
 
 extension AccountsCoordinator: WalletCoordinatorDelegate {
+    
     func didFinish(with account: Wallet, in coordinator: WalletCoordinator) {
         delegate?.didAddAccount(account: account, in: self)
+        
         if let delegate = delegate {
             removeCoordinator(coordinator)
             delegate.didSelectAccount(account: account, in: self)
         } else {
             accountsViewController.fetch()
-            coordinator.navigationController.dismiss(animated: true, completion: nil)
+            coordinator.navigationController.popViewController(animated: true)
+
             removeCoordinator(coordinator)
         }
     }
 
-    func didFail(with error: Error, in coordinator: WalletCoordinator) {
-        coordinator.navigationController.dismiss(animated: true, completion: nil)
-        removeCoordinator(coordinator)
-    }
-
     func didCancel(in coordinator: WalletCoordinator) {
-        coordinator.navigationController.dismiss(animated: true, completion: nil)
+        coordinator.navigationController.popViewController(animated: true)
         removeCoordinator(coordinator)
     }
 }

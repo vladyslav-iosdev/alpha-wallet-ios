@@ -10,9 +10,24 @@ protocol InitialWalletCreationCoordinatorDelegate: class {
 
 class InitialWalletCreationCoordinator: Coordinator {
     private let keystore: Keystore
-    private let entryPoint: WalletEntryPoint
     private let config: Config
     private let analyticsCoordinator: AnalyticsCoordinator?
+
+    lazy var navigationControllerToPresent: UINavigationController = {
+        let navigationController = UINavigationController(rootViewController: controller)
+        navigationController.navigationBar.isTranslucent = false
+        navigationController.makePresentationFullScreenForiOS13Migration()
+
+        return navigationController
+    }()
+
+    private lazy var controller: CreateInitialWalletViewController = {
+        let controller = CreateInitialWalletViewController(keystore: keystore, analyticsCoordinator: analyticsCoordinator)
+        controller.delegate = self
+        controller.configure()
+
+        return controller
+    }()
 
     let navigationController: UINavigationController
     var coordinators: [Coordinator] = []
@@ -20,65 +35,56 @@ class InitialWalletCreationCoordinator: Coordinator {
 
     init(
         config: Config,
-        navigationController: UINavigationController = UINavigationController(),
+        navigationController: UINavigationController,
         keystore: Keystore,
-        entryPoint: WalletEntryPoint,
         analyticsCoordinator: AnalyticsCoordinator?
     ) {
+
         self.config = config
         self.navigationController = navigationController
         self.keystore = keystore
-        self.entryPoint = entryPoint
         self.analyticsCoordinator = analyticsCoordinator
     }
 
     func start() {
-        switch entryPoint {
-        case .createInstantWallet, .welcome:
-            showCreateWallet()
-        case .addInitialWallet:
-            presentAddInitialWallet()
-        case .importWallet:
-            presentImportOrWatchWallet()
-        case .watchWallet:
-            presentImportOrWatchWallet()
-        }
+        navigationController.present(navigationControllerToPresent, animated: true)
     }
 
-    func showCreateWallet() {
-        let coordinator = WalletCoordinator(config: config, navigationController: navigationController, keystore: keystore, analyticsCoordinator: analyticsCoordinator)
+    private func showCreateWallet(entryPoint: WalletEntryPoint) {
+        let coordinator = WalletCoordinator(config: config, navigationController: navigationControllerToPresent, keystore: keystore, analyticsCoordinator: analyticsCoordinator)
         coordinator.delegate = self
-        let _ = coordinator.start(entryPoint)
-        addCoordinator(coordinator)
-    }
+        coordinator.start(entryPoint)
 
-    func presentImportOrWatchWallet() {
-        let coordinator = WalletCoordinator(config: config, keystore: keystore, analyticsCoordinator: analyticsCoordinator)
-        coordinator.delegate = self
-        let _ = coordinator.start(entryPoint)
-        coordinator.navigationController.makePresentationFullScreenForiOS13Migration()
-        navigationController.present(coordinator.navigationController, animated: true, completion: nil)
-        addCoordinator(coordinator)
-    }
-
-    func presentAddInitialWallet() {
-        let coordinator = WalletCoordinator(config: config, keystore: keystore, analyticsCoordinator: analyticsCoordinator)
-        coordinator.delegate = self
-        let _ = coordinator.start(entryPoint)
-        coordinator.navigationController.makePresentationFullScreenForiOS13Migration()
-        navigationController.present(coordinator.navigationController, animated: true, completion: nil)
         addCoordinator(coordinator)
     }
 }
 
+extension InitialWalletCreationCoordinator: CreateInitialWalletViewControllerDelegate {
+
+    func didTapCreateWallet(inViewController viewController: CreateInitialWalletViewController) {
+        showCreateWallet(entryPoint: .createInstantWallet)
+    }
+
+    func didTapWatchWallet(inViewController viewController: CreateInitialWalletViewController) {
+        showCreateWallet(entryPoint: .watchWallet(address: nil))
+    }
+
+    func didTapImportWallet(inViewController viewController: CreateInitialWalletViewController) {
+        showCreateWallet(entryPoint: .importWallet)
+    }
+}
+
 extension InitialWalletCreationCoordinator: WalletCoordinatorDelegate {
+
     func didFinish(with account: Wallet, in coordinator: WalletCoordinator) {
         delegate?.didAddAccount(account, in: self)
+
         removeCoordinator(coordinator)
     }
 
-    func didCancel(in coordinator: WalletCoordinator) {
-        delegate?.didCancel(in: self)
+    func didCancel(in coordinator: WalletCoordinator) { 
+        coordinator.navigationController.popViewController(animated: true)
+
         removeCoordinator(coordinator)
     }
 }

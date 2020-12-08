@@ -2,9 +2,7 @@
 
 import Foundation
 
-enum WalletEntryPoint {
-    case welcome
-    case addInitialWallet
+enum WalletEntryPoint { 
     case createInstantWallet
     case importWallet
     case watchWallet(address: AlphaWallet.Address?)

@@ -307,15 +307,12 @@ extension TokensCoordinator: QRCodeResolutionCoordinatorDelegate {
     }
 
     private func handleWatchWallet(_ address: AlphaWallet.Address) {
-        let walletCoordinator = WalletCoordinator(config: config, keystore: keystore, analyticsCoordinator: analyticsCoordinator)
+        let walletCoordinator = WalletCoordinator(config: config, navigationController: navigationController, keystore: keystore, analyticsCoordinator: analyticsCoordinator)
         walletCoordinator.delegate = self
 
         addCoordinator(walletCoordinator)
 
         walletCoordinator.start(.watchWallet(address: address))
-        walletCoordinator.navigationController.makePresentationFullScreenForiOS13Migration()
-
-        navigationController.present(walletCoordinator.navigationController, animated: true)
     }
 
     func coordinator(_ coordinator: QRCodeResolutionCoordinator, didResolveURL url: URL) {
@@ -349,13 +346,13 @@ extension TokensCoordinator: WalletCoordinatorDelegate {
     func didFinish(with account: Wallet, in coordinator: WalletCoordinator) {
         removeCoordinator(coordinator)
 
-        coordinator.navigationController.dismiss(animated: true)
+        coordinator.navigationController.popViewController(animated: true)
     }
 
     func didCancel(in coordinator: WalletCoordinator) {
         removeCoordinator(coordinator)
 
-        coordinator.navigationController.dismiss(animated: true)
+        coordinator.navigationController.popViewController(animated: true)
     }
 }
 
