@@ -45,7 +45,7 @@ enum ChartHistoryPeriod: Int, CaseIterable, Codable {
     }
 }
 
-struct HistoryValue: Equatable {
+struct HistoryValue: Codable, Equatable {
     let timestamp: TimeInterval
     let value: Double
 }
@@ -69,6 +69,11 @@ struct ChartHistory: Codable, CustomDebugStringConvertible {
         prices = container.decode([[Double]].self, forKey: .prices, defaultValue: []).map { value -> HistoryValue in
             return .init(timestamp: value[0] / 1000.0, value: value[1])
         }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(prices, forKey: .prices)
     }
 
     init(prices: [HistoryValue]) {
