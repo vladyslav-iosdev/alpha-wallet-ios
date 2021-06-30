@@ -56,7 +56,7 @@ class TokenInfoPageView: UIView, TokenPageViewType {
         self.transactionType = transactionType
         super.init(frame: .zero)
 
-        translatesAutoresizingMaskIntoConstraints = false 
+        translatesAutoresizingMaskIntoConstraints = false
 
         addSubview(scrollView)
 
@@ -65,7 +65,7 @@ class TokenInfoPageView: UIView, TokenPageViewType {
             scrollView.centerXAnchor.constraint(equalTo: centerXAnchor),
             scrollView.widthAnchor.constraint(equalTo: widthAnchor),
             scrollView.heightAnchor.constraint(equalTo: heightAnchor),
-            
+
             stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
             stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
             stackView.topAnchor.constraint(equalTo: scrollView.topAnchor),
@@ -144,13 +144,13 @@ class TokenInfoPageView: UIView, TokenPageViewType {
 
         let view15 = TickerFieldValueView()
 
-        view15.configure(viewModel: viewModel.yearHightViewModel)
+        view15.configure(viewModel: viewModel.yearHighViewModel)
         stackView.addArrangedSubview(view15)
     }
 
     func configure(viewModel: TokenInfoPageViewModel) {
         self.viewModel = viewModel
-        
+
         generateSubviews(viewModel: viewModel)
 
         var chartViewModel = chartView.viewModel
